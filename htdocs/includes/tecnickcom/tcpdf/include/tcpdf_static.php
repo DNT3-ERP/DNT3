@@ -1,9 +1,9 @@
 <?php
 //============================================================+
 // File name   : tcpdf_static.php
-// Version     : 1.1.3
+// Version     : 1.1.4
 // Begin       : 2002-08-03
-// Last Update : 2015-04-28
+// Last Update : 2019-11-01
 // Author      : Nicola Asuni - Tecnick.com LTD - www.tecnick.com - info@tecnick.com
 // License     : GNU-LGPL v3 (http://www.gnu.org/copyleft/lesser.html)
 // -------------------------------------------------------------------
@@ -55,7 +55,7 @@ class TCPDF_STATIC {
 	 * Current TCPDF version.
 	 * @private static
 	 */
-	private static $tcpdf_version = '6.3.2';
+	private static $tcpdf_version = '6.3.5';
 
 	/**
 	 * String alias for total number of pages.
@@ -1805,33 +1805,21 @@ class TCPDF_STATIC {
 		return $ret;
 	}
 
-    /**
-     * Wrapper to use fopen only with local files
-     * @param  string $filename The full path to the file to open
-     * @param  string $mode     Acceses type for the file ('r', 'r+', 'w', 'w+', 'a', 'a+', 'x', 'x+', 'c', 'c+' or 'e')
-     * @return resource         Returns a file pointer resource on success, or FALSE on error.
-     * @public static
-     */
-    public static function fopenLocal($filename, $mode)
-    {
-        if (strpos($filename, '//') === 0)
-        {
-            // Share folder on a (windows) server
-            // e.g.: "//[MyServerName]/[MySharedFolder]/"
-            //
-            // nothing to change
-        }
-        elseif (strpos($filename, '://') === false)
-        {
-            $filename = 'file://'.$filename;
-        }
-        elseif (stream_is_local($filename) !== true)
-        {
-            return false;
-        }
-
-        return fopen($filename, $mode);
-    }
+	/**
+	 * Wrapper to use fopen only with local files
+	 * @param filename (string) Name of the file to open
+	 * @param $mode (string) 
+	 * @return Returns a file pointer resource on success, or FALSE on error.  
+	 * @public static
+	 */
+	public static function fopenLocal($filename, $mode) {
+		if (strpos($filename, '://') === false) {
+			$filename = 'file://'.$filename;
+		} elseif (stream_is_local($filename) !== true) {
+			return false;
+		}
+		return fopen($filename, $mode);
+	}
 
 	/**
 	 * Check if the URL exist.
@@ -1841,6 +1829,8 @@ class TCPDF_STATIC {
 	 */
 	public static function url_exists($url) {
 		$crs = curl_init();
+		// encode query params in URL to get right response form the server
+		$url = self::encodeUrlQuery($url);
 		curl_setopt($crs, CURLOPT_URL, $url);
 		curl_setopt($crs, CURLOPT_NOBODY, true);
 		curl_setopt($crs, CURLOPT_FAILONERROR, true);
@@ -1856,6 +1846,26 @@ class TCPDF_STATIC {
 		$code = curl_getinfo($crs, CURLINFO_HTTP_CODE);
 		curl_close($crs);
 		return ($code == 200);
+	}
+
+	/**
+	 * Encode query params in URL
+	 *
+	 * @param string $url
+	 * @return string
+	 * @since 6.3.3 (2019-11-01)
+	 * @public static
+	 */
+	public static function encodeUrlQuery($url) {
+		$urlData = parse_url($url);
+		if (isset($urlData['query']) && $urlData['query']) {
+			$urlQueryData = [];
+			parse_str(urldecode($urlData['query']), $urlQueryData);
+			$updatedUrl = $urlData['scheme'] . '://' . $urlData['host'] . $urlData['path'] . '?' . http_build_query($urlQueryData);
+		} else {
+			$updatedUrl = $url;
+		}
+		return $updatedUrl;
 	}
 
 	/**

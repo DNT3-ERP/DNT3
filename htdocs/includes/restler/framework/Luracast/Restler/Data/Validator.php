@@ -615,7 +615,7 @@ class Validator implements iValidate
                             if ($contentType == 'indexed') {
                                 $input = $info->filterArray($input, true);
                             } elseif ($contentType == 'associative') {
-                                $input = $info->filterArray($input, false);
+                                $input = $info->filterArray($input, true);
                             }
                         } elseif (
                             $contentType == 'indexed' &&
