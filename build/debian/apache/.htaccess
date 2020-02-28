@@ -1,3 +1,6 @@
+RewriteEngine On
+RewriteRule ^index.html$ /index.php?page=accueil [L]
+
 # File used to disable access into directory documents
 <IfVersion >= 2.3>
 Require all denied
